@@ -1,12 +1,15 @@
 #include "instrument.hpp"
 #include <set>
+#include <iostream>
 
 Instrument :: Instrument() = default;
 
 ResultWrapper Instrument :: process_order(Order order) {
     if(order.order_type == OrderType::BUY) {
+        // std::cout << "BUY" << std::endl;
         return process_buy(order);
     } else {
+        // std::cout << "SELL" << std::endl;
         return process_sell(order);
     }
 }
@@ -39,6 +42,7 @@ ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType t
 ResultWrapper Instrument :: process_buy(Order buyOrder) {
     ResultWrapper result;
 
+    std::cout << sellSet.size() << std::endl;
     while(!sellSet.empty()) {
         // get the last sell (copy?)
         Order bestSell = *(std::prev(sellSet.end()));
@@ -69,8 +73,9 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
     }
     if(buyOrder.count > 0) {
         buySet.insert(buyOrder);
+        // std::cout << (buyOrder.order_type == OrderType::BUY) << std::endl;
         result.add_result(new Added(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
-            buyOrder.count, buyOrder.order_type == OrderType::BUY, getCurrentTimestamp()));
+            buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
         result.set_added();
     }
     return result; 

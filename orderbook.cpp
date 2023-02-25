@@ -6,7 +6,7 @@ ResultWrapper Orderbook::process_order(Order order)
     if (!is_exist_instr(order.instrument)) {
         m_instrument_map.insert({order.instrument, Instrument()});
     }
-    auto instruction_object = m_instrument_map.at(order.instrument); 
+    auto& instruction_object = m_instrument_map.at(order.instrument); 
     auto result = instruction_object.process_order(order); 
 
     if (result.is_added()) {
@@ -32,7 +32,7 @@ ResultWrapper Orderbook::process_cancel(CancelOrder order)
     }
 
     auto pair_name_type = m_id_map.at(order.order_id); 
-    auto instruction_object = m_instrument_map.at(pair_name_type.first);
+    auto& instruction_object = m_instrument_map.at(pair_name_type.first);
     m_id_map.erase(order.order_id);
     return instruction_object.process_cancel(order, pair_name_type.second); 
 }
