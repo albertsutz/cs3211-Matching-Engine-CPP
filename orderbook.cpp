@@ -1,5 +1,5 @@
 #include "orderbook.hpp" 
-
+#include <memory>
 
 ResultWrapper Orderbook::process_order(Order order) 
 {
@@ -25,7 +25,7 @@ ResultWrapper Orderbook::process_cancel(CancelOrder order)
     //ambil mutex disini aja 
     if (!is_exist_id(order.order_id)) {
         ResultWrapper result; 
-        result.add_result(new Deleted(
+        result.add_result(std::make_shared<Deleted>(
             order.order_id, false, getCurrentTimestamp()
         ));
         return result; 

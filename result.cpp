@@ -1,7 +1,7 @@
 #include "result.hpp" 
 
 
-std::vector<IResult*> ResultWrapper::get_result() 
+std::vector<std::shared_ptr<IResult>> ResultWrapper::get_result() 
 {
     return results; 
 }
@@ -16,7 +16,7 @@ ResultWrapper::ResultWrapper():
 { 
 }
 
-void ResultWrapper::add_result(IResult* res) 
+void ResultWrapper::add_result(std::shared_ptr<IResult> res) 
 {
     results.push_back(res); 
 }

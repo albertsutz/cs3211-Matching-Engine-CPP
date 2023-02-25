@@ -1,6 +1,7 @@
 #include "instrument.hpp"
 #include <set>
 #include <iostream>
+#include <memory>
 
 Instrument :: Instrument() = default;
 
@@ -32,7 +33,7 @@ ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType t
     }
     
     ResultWrapper res; 
-    res.add_result(new Deleted(
+    res.add_result(std::make_shared<Deleted>(
         cancel_order.order_id, true, getCurrentTimestamp()
     ));
     res.add_deleted(cancel_order.order_id);
@@ -52,7 +53,7 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
             bestSell.count -= quantityTraded;
             buyOrder.count -= quantityTraded;
 
-            result.add_result(new Executed(bestSell.order_id, buyOrder.order_id,
+            result.add_result(std::make_shared<Executed>(bestSell.order_id, buyOrder.order_id,
 	            bestSell.execution_id++, bestSell.price, quantityTraded, getCurrentTimestamp()
                 ));
                 
@@ -72,7 +73,7 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
     }
     if(buyOrder.count > 0) {
         buySet.insert(buyOrder);
-        result.add_result(new Added(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
+        result.add_result(std::make_shared<Added>(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
             buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
         result.set_added();
     }
@@ -91,7 +92,7 @@ ResultWrapper Instrument :: process_sell(Order sellOrder) {
             uint32_t quantityTraded = std::min(bestBuy.count, sellOrder.count);
             bestBuy.count -= quantityTraded;
             sellOrder.count -= quantityTraded;
-            result.add_result(new Executed(bestBuy.order_id, sellOrder.order_id,
+            result.add_result(std::make_shared<Executed>(bestBuy.order_id, sellOrder.order_id,
 	            bestBuy.execution_id++, bestBuy.price, quantityTraded, getCurrentTimestamp()
                 ));
             if(bestBuy.count > 0) {
@@ -110,7 +111,7 @@ ResultWrapper Instrument :: process_sell(Order sellOrder) {
     }
     if(sellOrder.count > 0) {
         sellSet.insert(sellOrder);
-        result.add_result(new Added(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
+        result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
             sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
         result.set_added();
     }

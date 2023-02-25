@@ -3,6 +3,7 @@
 
 #include "io.hpp"
 #include "engine.hpp"
+#include <memory>
 
 void Engine::accept(ClientConnection connection)
 {
@@ -34,7 +35,7 @@ void Engine::connection_thread(ClientConnection connection)
 				// auto output_time = getCurrentTimestamp();
 				// Output::OrderDeleted(input.order_id, true, output_time);
 				CancelOrder cancel_order = CancelOrder(input.order_id);
-				auto result = (Deleted*) orderbook.process_cancel(cancel_order).get_result().at(0); 
+				auto result = std::dynamic_pointer_cast<Deleted>(orderbook.process_cancel(cancel_order).get_result().at(0)); 
 
 				Output::OrderDeleted(result->id, result->cancel_accepted, result->output_timestamp);
 				break;
@@ -52,13 +53,13 @@ void Engine::connection_thread(ClientConnection connection)
 				for (auto& result: results.get_result()) {
 					switch(result->get_type()) {
 						case ORDER_ADDED: {
-							auto result_add = (Added*) result;
+							auto result_add = std::dynamic_pointer_cast<Added>(result);
 							Output::OrderAdded(result_add->id, (result_add->symbol).c_str(), result_add->price, result_add->count,
 								result_add->is_sell_side, result_add->output_timestamp);
 							break;
 						}
 						case ORDER_EXECUTED: {
-							auto result_execute = (Executed*) result;
+							auto result_execute = std::dynamic_pointer_cast<Executed>(result);
 							Output::OrderExecuted(result_execute->resting_id, result_execute->new_id, result_execute->execution_id, 
 								result_execute->price, result_execute->count, result_execute->output_timestamp);
 							break;
