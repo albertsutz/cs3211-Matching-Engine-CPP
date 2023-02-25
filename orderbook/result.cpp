@@ -1,6 +1,26 @@
 #include "result.hpp" 
 
 
+std::vector<IResult*> ResultWrapper::get_result() 
+{
+    return results; 
+}
+
+bool ResultWrapper::is_added() 
+{
+    return added; 
+}
+
+ResultWrapper::ResultWrapper():
+    added{false} 
+{ 
+}
+
+void ResultWrapper::add_result(IResult* res) 
+{
+    results.push_back(res); 
+}
+
 Deleted::Deleted(int32_t id, 
     bool cancel_accepted, 
     intmax_t output_timestamp):

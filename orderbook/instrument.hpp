@@ -7,8 +7,8 @@
 
 class Instrument {
 public: 
-    std::vector<IResult> process_order(Order); 
-    std::vector<IResult> process_cancel(CancelOrder); 
+    ResultWrapper process_order(Order); 
+    ResultWrapper process_cancel(CancelOrder); 
 
 private:
     

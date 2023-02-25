@@ -10,10 +10,12 @@
 class Orderbook 
 {
 public: 
-    std::vector<IResult> process_order(Order);  
-    std::vector<IResult> process_cancel(CancelOrder); 
+    ResultWrapper process_order(Order);  
+    ResultWrapper process_cancel(CancelOrder); 
 
 private:
     std::unordered_map<std::string, Instrument> m_instrument_map; 
-    bool is_exist(std::string); 
+    std::unordered_map<uint32_t, std::string> m_id_to_instrument; 
+    bool is_exist_instr(std::string); 
+    bool is_exist_id(uint32_t); 
 };

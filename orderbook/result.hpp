@@ -1,8 +1,21 @@
 #pragma once 
 
 #include <unordered_map>
+#include <vector> 
 
 enum ResultType {ORDER_ADDED, ORDER_EXECUTED, ORDER_DELETED};
+
+class ResultWrapper {
+public:  
+    ResultWrapper();
+    void add_result(IResult*); 
+    std::vector<IResult> get_result(); 
+    bool is_added(); 
+
+private:
+    std::vector<IResult*> results; 
+    bool added;
+};
 
 class IResult 
 {
