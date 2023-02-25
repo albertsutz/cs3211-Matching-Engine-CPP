@@ -11,6 +11,7 @@ struct Order
     uint32_t order_id; 
     uint32_t price; 
     uint32_t count; 
+    uint32_t time;
     char instrument[9]; 
 };
 
