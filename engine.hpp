@@ -7,19 +7,17 @@
 #include <chrono>
 
 #include "io.hpp"
+#include "./orderbook/orderbook.hpp"
 
 struct Engine
 {
 public:
 	void accept(ClientConnection conn);
+	Orderbook orderbook;
+	Engine() = default;
 
 private:
 	void connection_thread(ClientConnection conn);
 };
-
-inline std::chrono::microseconds::rep getCurrentTimestamp() noexcept
-{
-	return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-}
 
 #endif

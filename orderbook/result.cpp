@@ -21,6 +21,14 @@ void ResultWrapper::add_result(IResult* res)
     results.push_back(res); 
 }
 
+void ResultWrapper::set_added() {
+    added = true;
+}
+
+std::vector<uint32_t> ResultWrapper::get_deleted_ids() {
+    return deleted_ids;
+}
+
 Deleted::Deleted(int32_t id, 
     bool cancel_accepted, 
     intmax_t output_timestamp):
@@ -35,7 +43,8 @@ ResultType Deleted::get_type()
     return ORDER_DELETED; 
 }
 
-Added::Added(uint32_t id, 
+Added::Added(
+    uint32_t id, 
         const char* symbol,
         uint32_t price, 
         uint32_t count, 

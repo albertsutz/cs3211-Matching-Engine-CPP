@@ -9,11 +9,15 @@ class ResultWrapper {
 public:  
     ResultWrapper();
     void add_result(IResult*); 
-    std::vector<IResult> get_result(); 
+    void add_deleted(uint32_t); 
+    std::vector<IResult*> get_result(); 
+    std::vector<uint32_t> get_deleted_ids(); 
     bool is_added(); 
+    void set_added();
 
 private:
     std::vector<IResult*> results; 
+    std::vector<uint32_t> deleted_ids; 
     bool added;
 };
 
@@ -23,7 +27,7 @@ public:
     virtual ResultType get_type() = 0;
 };
 
-class Deleted: IResult 
+class Deleted: public IResult 
 {
 public:
     Deleted(int32_t id, 
@@ -31,13 +35,12 @@ public:
         intmax_t output_timestamp);
     virtual ResultType get_type();
 
-private:
     uint32_t id;         
     bool cancel_accepted;              
-    intmax_t output_timestamp;                 
+    intmax_t output_timestamp;   
 };
 
-class Added: IResult 
+class Added: public IResult 
 {
 public:
     Added(uint32_t id, 
@@ -48,8 +51,7 @@ public:
         intmax_t output_timestamp);
     virtual ResultType get_type();
 
-private:
-uint32_t id; 
+    uint32_t id; 
     const char* symbol; 
     uint32_t price;
     uint32_t count;
@@ -57,7 +59,7 @@ uint32_t id;
     intmax_t output_timestamp;
 };
 
-class Executed: IResult
+class Executed: public IResult
 {
 public:
     Executed(uint32_t resting_id,
@@ -68,12 +70,11 @@ public:
 	    intmax_t output_timestamp);
     virtual ResultType get_type();
 
-private:
-    uint32_t resting_id;
+     uint32_t resting_id;
     uint32_t new_id;
     uint32_t execution_id;
     uint32_t price;
     uint32_t count;
-    intmax_t output_timestamp;
+    intmax_t output_timestamp;   
 };
 
