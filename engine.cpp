@@ -48,7 +48,6 @@ void Engine::connection_thread(ClientConnection connection)
 				// Remember to take timestamp at the appropriate time, or compute
 				// an appropriate timestamp!
 				Order order{input.type == input_buy? BUY: SELL, input.order_id, input.price, input.count, (uint32_t)getCurrentTimestamp(), input.instrument, 1};
-				// std::cout << (input.type == input_buy) << std::endl;
 				ResultWrapper results = orderbook.process_order(order);
 				for (auto& result: results.get_result()) {
 					switch(result->get_type()) {
@@ -69,9 +68,6 @@ void Engine::connection_thread(ClientConnection connection)
 						}
 					}
 				}
-				// auto output_time = getCurrentTimestamp();
-				// Output::OrderAdded(input.order_id, input.instrument, input.price, input.count, input.type == input_sell,
-				//     output_time);
 				break;
 			}
 		}

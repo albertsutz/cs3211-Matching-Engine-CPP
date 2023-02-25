@@ -42,7 +42,6 @@ ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType t
 ResultWrapper Instrument :: process_buy(Order buyOrder) {
     ResultWrapper result;
 
-    std::cout << sellSet.size() << std::endl;
     while(!sellSet.empty()) {
         // get the last sell (copy?)
         Order bestSell = *(std::prev(sellSet.end()));
@@ -73,7 +72,6 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
     }
     if(buyOrder.count > 0) {
         buySet.insert(buyOrder);
-        // std::cout << (buyOrder.order_type == OrderType::BUY) << std::endl;
         result.add_result(new Added(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
             buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
         result.set_added();
@@ -89,7 +87,7 @@ ResultWrapper Instrument :: process_sell(Order sellOrder) {
         Order bestBuy = *(std::prev(buySet.end()));
         // pop the last buy
         buySet.erase(std::prev(buySet.end()));
-        if(sellOrder.price >= bestBuy.price) {
+        if(bestBuy.price >= sellOrder.price) {
             uint32_t quantityTraded = std::min(bestBuy.count, sellOrder.count);
             bestBuy.count -= quantityTraded;
             sellOrder.count -= quantityTraded;

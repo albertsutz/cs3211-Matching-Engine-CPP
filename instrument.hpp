@@ -5,22 +5,43 @@
 #include "result.hpp" 
 #include <vector>
 #include <set>
+#include <iostream>
 
 auto buyComparator = [](Order a, Order b) {
     if(a.price != b.price) {
-        return a.price - b.price;
+        return a.price < b.price;
     } else {
-        return b.time - a.time;
+        return b.time < a.time;
     }
 };
 
 auto sellComparator = [](Order a, Order b) {
     if(a.price != b.price) {
-        return b.price - a.price;
+        return b.price < a.price;
     } else {
-        return b.time - a.time;
+        return b.time < a.time;
     }
 };
+
+// struct buyComparator {
+//     bool operator() (Order a, Order b) const {
+//         if(a.price != b.price) {
+//             return a.price < b.price;
+//         } else {
+//             return b.time < a.time;
+//         }
+//     }
+// };
+
+// struct sellComparator {
+//     bool operator() (Order a, Order b) const {
+//         if(a.price != b.price) {
+//             return b.price < a.price;
+//         } else {
+//             return b.time < a.time;
+//         }
+//     }
+// };
 
 class Instrument {
 public: 
@@ -33,6 +54,19 @@ public:
     ResultWrapper process_sell(Order);
 
     Instrument();
+
+    void printSellSet() {
+        for(auto i = sellSet.begin(); i != sellSet.end(); i++) {
+            std::cout << (*i).price << ' ';
+        }
+        std::cout << std::endl;
+    }
+    void printBuySet() {
+        for(auto i = buySet.begin(); i != buySet.end(); i++) {
+            std::cout << (*i).price << ' ';
+        }
+        std::cout << std::endl;
+    }
 private:
     
 };
