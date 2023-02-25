@@ -47,19 +47,24 @@ void Engine::connection_thread(ClientConnection connection)
 
 				// Remember to take timestamp at the appropriate time, or compute
 				// an appropriate timestamp!
-				Order order{input.type == input_buy? BUY: SELL, input.order_id, input.price, input.count, getCurrentTimestamp(), input.instrument, 1};
+				Order order{input.type == input_buy? BUY: SELL, input.order_id, input.price, input.count, (uint32_t)getCurrentTimestamp(), input.instrument, 1};
 				ResultWrapper results = orderbook.process_order(order);
 				for (auto& result: results.get_result()) {
 					switch(result->get_type()) {
 						case ORDER_ADDED: {
 							auto result_add = (Added*) result;
-							Output::OrderAdded(result_add->id, result_add->symbol, result_add->price, result_add->count,
+							Output::OrderAdded(result_add->id, (result_add->symbol).c_str(), result_add->price, result_add->count,
 								result_add->is_sell_side, result_add->output_timestamp);
+							break;
 						}
 						case ORDER_EXECUTED: {
 							auto result_execute = (Executed*) result;
 							Output::OrderExecuted(result_execute->resting_id, result_execute->new_id, result_execute->execution_id, 
 								result_execute->price, result_execute->count, result_execute->output_timestamp);
+							break;
+						}
+						default: {
+							SyncCerr {} << "what is this" << std::endl;
 						}
 					}
 				}
