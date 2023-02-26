@@ -16,10 +16,12 @@ ResultWrapper Instrument :: process_order(Order order) {
 }
 
 ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType type) {
+    bool deleted = false;
     if (type == OrderType :: BUY) {
         for(auto i = buySet.begin(), last = buySet.end(); i != last; ) {
             if((*i).order_id == cancel_order.order_id) {
                 buySet.erase(i);
+                deleted = true;
                 break;
             }
         }
@@ -27,17 +29,27 @@ ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType t
         for(auto i = sellSet.begin(), last = sellSet.end(); i != last; ) {
             if((*i).order_id == cancel_order.order_id) {
                 sellSet.erase(i);
+                deleted = true;
                 break;
             }
         }
     }
     
-    ResultWrapper res; 
-    res.add_result(std::make_shared<Deleted>(
-        cancel_order.order_id, true, getCurrentTimestamp()
-    ));
-    res.add_deleted(cancel_order.order_id);
-    return res;
+    if(deleted) {
+        ResultWrapper res; 
+        res.add_result(std::make_shared<Deleted>(
+            cancel_order.order_id, true, getCurrentTimestamp()
+        ));
+        res.add_deleted(cancel_order.order_id);
+        return res;
+    } else {
+        ResultWrapper res; 
+        res.add_result(std::make_shared<Deleted>(
+            cancel_order.order_id, false, getCurrentTimestamp()
+        ));
+        return res;
+    }
+
 }
 
 ResultWrapper Instrument :: process_buy(Order buyOrder) {

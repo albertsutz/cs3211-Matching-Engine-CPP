@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <iostream>
+#include <mutex>
 
 auto buyComparator = [](Order a, Order b) {
     if(a.price != b.price) {
@@ -23,30 +24,11 @@ auto sellComparator = [](Order a, Order b) {
     }
 };
 
-// struct buyComparator {
-//     bool operator() (Order a, Order b) const {
-//         if(a.price != b.price) {
-//             return a.price < b.price;
-//         } else {
-//             return b.time < a.time;
-//         }
-//     }
-// };
-
-// struct sellComparator {
-//     bool operator() (Order a, Order b) const {
-//         if(a.price != b.price) {
-//             return b.price < a.price;
-//         } else {
-//             return b.time < a.time;
-//         }
-//     }
-// };
-
 class Instrument {
 public: 
     std::set<Order, decltype(buyComparator)> buySet;
     std::set<Order, decltype(sellComparator)> sellSet;
+    std::mutex instr_mutex;
 
     ResultWrapper process_order(Order); 
     ResultWrapper process_cancel(CancelOrder, OrderType); 
