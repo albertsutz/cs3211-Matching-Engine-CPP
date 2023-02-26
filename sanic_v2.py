@@ -46,7 +46,7 @@ def main():
         sys.exit(1) 
 
     n, b, s, c, n_instr = list(map(int, args)) 
-    if n <= 0 or b <= 0 or s <= 0 or c <= 0 or n_instr <= 0:
+    if n <= 0 or b <= 0 or s <= 0 or n_instr <= 0:
         print("n, b, s, c must be greater than 0")
         sys.exit(1) 
 

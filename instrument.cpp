@@ -96,9 +96,11 @@ ResultWrapper Instrument :: execute_buy(Order buyOrder) {
     }
     if(buyOrder.count > 0) {
         std::unique_lock buy_lock {buy_set_mutex};
+        auto timestamp = getCurrentTimestamp();
+        buyOrder.time = timestamp;
         buySet.insert(buyOrder);
         result.add_result(std::make_shared<Added>(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
-            buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
+            buyOrder.count, buyOrder.order_type == OrderType::SELL, timestamp));
         result.set_added();
     }
     return result; 
@@ -147,9 +149,11 @@ ResultWrapper Instrument :: execute_sell(Order sellOrder) {
     }
     if(sellOrder.count > 0) {
         std::unique_lock sell_lock {sell_set_mutex};
+        auto timestamp = getCurrentTimestamp();
+        sellOrder.time = timestamp; 
         sellSet.insert(sellOrder);
         result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
-            sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
+            sellOrder.count, sellOrder.order_type == OrderType::SELL, timestamp));
         result.set_added();
     }
     return result; 
@@ -163,9 +167,11 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
         //masukkin aja
         ResultWrapper result;
         std::unique_lock buy_lock {buy_set_mutex};
+        auto timestamp = getCurrentTimestamp();
+        buyOrder.time = timestamp;
         buySet.insert(buyOrder);
         result.add_result(std::make_shared<Added>(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
-            buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
+            buyOrder.count, buyOrder.order_type == OrderType::SELL, timestamp));
         result.set_added();
         return result;
     } 
@@ -180,9 +186,11 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
         //masukkin aja
         ResultWrapper result;
         std::unique_lock buy_lock {buy_set_mutex};
+        auto timestamp = getCurrentTimestamp();
+        buyOrder.time = timestamp; 
         buySet.insert(buyOrder);
         result.add_result(std::make_shared<Added>(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
-            buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
+            buyOrder.count, buyOrder.order_type == OrderType::SELL, timestamp));
         result.set_added();
         return result;
     } 
@@ -193,9 +201,11 @@ ResultWrapper Instrument :: process_sell(Order sellOrder) {
     if(buySet.empty()) {
         ResultWrapper result;
         std::unique_lock sell_lock {sell_set_mutex};
+        auto timestamp = getCurrentTimestamp(); 
+        sellOrder.time = timestamp;
         sellSet.insert(sellOrder);
         result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
-            sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
+            sellOrder.count, sellOrder.order_type == OrderType::SELL, timestamp));
         result.set_added();
         return result;
     } 
@@ -210,10 +220,42 @@ ResultWrapper Instrument :: process_sell(Order sellOrder) {
         //masukkin aja
         ResultWrapper result;
         std::unique_lock sell_lock {sell_set_mutex};
+        auto timestamp = getCurrentTimestamp(); 
+        sellOrder.time = timestamp; 
         sellSet.insert(sellOrder);
         result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
-            sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
+            sellOrder.count, sellOrder.order_type == OrderType::SELL, timestamp));
         result.set_added();
         return result;
     } 
 }
+
+bool Instrument::canEnter(OrderType type) {
+    return type == current_type || counter == 0;
+}
+
+void Instrument::enter(OrderType type) {
+    std::unique_lock lock(mutex_counter); 
+
+    while (!canEnter(type)) {
+        cv.wait(lock); 
+    }
+
+    if (counter == 0) {
+        current_type = type; 
+    }
+    counter++; 
+}
+
+bool Instrument::release(OrderType) {
+    std::unique_lock lock(mutex_counter); 
+
+    counter--; 
+    return counter == 0; 
+}
+
+void Instrument::exit(OrderType type) {
+    if (release(type)) 
+        cv.notify_all(); 
+} 
+

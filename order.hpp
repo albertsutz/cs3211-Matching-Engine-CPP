@@ -5,7 +5,7 @@
 #include <string>
 
 
-enum OrderType {BUY, SELL};
+enum OrderType {BUY, SELL, CANCEL};
 
 struct Order 
 {

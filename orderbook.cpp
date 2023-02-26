@@ -11,9 +11,9 @@ ResultWrapper Orderbook::process_order(Order order)
     m_id_map[order.order_id] = std::make_pair(order.instrument, order.order_type);
     global_lock.unlock();
 
-    // std::unique_lock instrument_lock {instruction_object.instr_mutex};
+    instruction_object.enter(order.order_type);
     auto result = instruction_object.process_order(order); 
-    // instrument_lock.unlock();
+    instruction_object.exit(order.order_type);
 
     return result;
 }
@@ -26,7 +26,11 @@ ResultWrapper Orderbook::process_cancel(CancelOrder order)
     auto& instruction_object = m_instrument_map.at(pair_name_type.first);
     global_lock.unlock();
 
-    return instruction_object.process_cancel(order, pair_name_type.second); 
+    instruction_object.enter(CANCEL);
+    auto res = instruction_object.process_cancel(order, pair_name_type.second); 
+    instruction_object.exit(CANCEL);
+
+    return res; 
 }
 
 bool Orderbook::is_exist_instr(std::string instr) 

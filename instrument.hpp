@@ -7,6 +7,7 @@
 #include <set>
 #include <iostream>
 #include <mutex>
+#include <condition_variable> 
 
 auto buyComparator = [](Order a, Order b) {
     if(a.price != b.price) {
@@ -26,10 +27,13 @@ auto sellComparator = [](Order a, Order b) {
 
 class Instrument {
 public: 
+    int counter = 0; 
+    OrderType current_type; 
+    std::mutex mutex_counter; 
+    std::condition_variable cv; 
+
     std::set<Order, decltype(buyComparator)> buySet;
     std::set<Order, decltype(sellComparator)> sellSet;
-    std::mutex buy_mutex;
-    std::mutex sell_mutex;
     std::mutex buy_set_mutex;
     std::mutex sell_set_mutex;
     std::mutex execution_mutex;
@@ -40,6 +44,11 @@ public:
     ResultWrapper process_sell(Order);
     ResultWrapper execute_buy(Order);
     ResultWrapper execute_sell(Order);
+
+    bool canEnter(OrderType);
+    void enter(OrderType);
+    bool release(OrderType);
+    void exit(OrderType); 
 
     Instrument();
 
