@@ -28,11 +28,12 @@ class Instrument {
 public: 
     std::set<Order, decltype(buyComparator)> buySet;
     std::set<Order, decltype(sellComparator)> sellSet;
-    std::mutex buy_mutex;
-    std::mutex sell_mutex;
-    std::mutex buy_set_mutex;
-    std::mutex sell_set_mutex;
-    std::mutex execution_mutex;
+    std::mutex m_instrument_mutex;
+    // std::mutex buy_mutex;
+    // std::mutex sell_mutex;
+    // std::mutex buy_set_mutex;
+    // std::mutex sell_set_mutex;
+    // std::mutex execution_mutex;
 
     ResultWrapper process_order(Order); 
     ResultWrapper process_cancel(CancelOrder, OrderType); 

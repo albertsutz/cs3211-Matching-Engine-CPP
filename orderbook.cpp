@@ -8,13 +8,10 @@ ResultWrapper Orderbook::process_order(Order order)
         m_instrument_map.emplace(std::piecewise_construct, std::forward_as_tuple(order.instrument), std::forward_as_tuple());
     }
     auto& instruction_object = m_instrument_map.at(order.instrument);
+    m_id_map[order.order_id] = std::make_pair(order.instrument, order.order_type);
     global_lock.unlock();
 
-    std::unique_lock instrument_lock {instruction_object.instr_mutex};
     auto result = instruction_object.process_order(order); 
-    instrument_lock.unlock();
-
-    m_id_map[order.order_id] = std::make_pair(order.instrument, order.order_type);
     return result;
 }
 
