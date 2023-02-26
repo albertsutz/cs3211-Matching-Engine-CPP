@@ -7,18 +7,13 @@ Instrument :: Instrument() = default;
 
 ResultWrapper Instrument :: process_order(Order order) {
     if(order.order_type == OrderType::BUY) {
-        // std::cout << "BUY" << std::endl;
         return process_buy(order);
     } else {
-        // std::cout << "SELL" << std::endl;
         return process_sell(order);
     }
 }
 
 ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType type) {
-    // std::cout << "acquiring inst lock\n";
-    // std::unique_lock instrument_lock {instr_mutex};
-    // std::cout << "got inst lock\n";
     std::unique_lock buy_lock {buy_set_mutex};
     std::unique_lock sell_lock {sell_set_mutex};
     
@@ -44,7 +39,6 @@ ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType t
     }
     
     if(deleted) {
-        // std::cout << "Deleted\n";
         ResultWrapper res; 
         res.add_result(std::make_shared<Deleted>(
             cancel_order.order_id, true, getCurrentTimestamp()
@@ -52,7 +46,6 @@ ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType t
         res.add_deleted(cancel_order.order_id);
         return res;
     } else {
-        // std::cout << "not deleted\n";
         ResultWrapper res; 
         res.add_result(std::make_shared<Deleted>(
             cancel_order.order_id, false, getCurrentTimestamp()
@@ -65,9 +58,7 @@ ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType t
 ResultWrapper Instrument :: execute_buy(Order buyOrder) {
     ResultWrapper result;
     // cmn bsa 1 yang di execution
-    // std::cout << "acquiring execution lock" << std::endl;
     std::unique_lock execution_lock {execution_mutex};
-    // std::cout << "got execution lock" << std::endl;
     while (true) {
         std::unique_lock sell_lock {sell_set_mutex};
         if(sellSet.empty()) {

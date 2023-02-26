@@ -57,9 +57,11 @@ def main():
     instruments = generate_instruments(n_instr)
 
     while available: 
-        a = random.choice(available) 
-        available.remove(a) 
+        index = random.randint(0, len(available) - 1)
+        available[index], available[-1] =  available[-1], available[index]
 
+        a = available.pop() 
+        
         if a != 'C':
             commands.append(create_order(n, a, thread_history, instruments))
         elif not thread_history:
