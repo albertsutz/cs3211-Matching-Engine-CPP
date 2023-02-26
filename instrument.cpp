@@ -59,8 +59,8 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
         // get the last sell (copy?)
         Order bestSell = *(std::prev(sellSet.end()));
         //pop the last
-        sellSet.erase(std::prev(sellSet.end()));
         if(buyOrder.price >= bestSell.price) {
+            sellSet.erase(std::prev(sellSet.end()));
             uint32_t quantityTraded = std::min(buyOrder.count, bestSell.count);
             bestSell.count -= quantityTraded;
             buyOrder.count -= quantityTraded;
@@ -99,8 +99,8 @@ ResultWrapper Instrument :: process_sell(Order sellOrder) {
         // get the last buy
         Order bestBuy = *(std::prev(buySet.end()));
         // pop the last buy
-        buySet.erase(std::prev(buySet.end()));
         if(bestBuy.price >= sellOrder.price) {
+            buySet.erase(std::prev(buySet.end()));
             uint32_t quantityTraded = std::min(bestBuy.count, sellOrder.count);
             bestBuy.count -= quantityTraded;
             sellOrder.count -= quantityTraded;
