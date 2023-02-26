@@ -17,8 +17,11 @@ ResultWrapper Instrument :: process_order(Order order) {
 
 ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType type) {
     // std::cout << "acquiring inst lock\n";
-    std::unique_lock instrument_lock {instr_mutex};
+    // std::unique_lock instrument_lock {instr_mutex};
     // std::cout << "got inst lock\n";
+    std::unique_lock buy_lock {buy_set_mutex};
+    std::unique_lock sell_lock {sell_set_mutex};
+    
     bool deleted = false;
     if (type == OrderType :: BUY) {
         for(auto i = buySet.begin(), last = buySet.end(); i != last; ) {
@@ -66,7 +69,7 @@ ResultWrapper Instrument :: execute_buy(Order buyOrder) {
     std::unique_lock execution_lock {execution_mutex};
     // std::cout << "got execution lock" << std::endl;
     while (true) {
-        std::unique_lock sell_lock {sell_mutex};
+        std::unique_lock sell_lock {sell_set_mutex};
         if(sellSet.empty()) {
             break;
         }
@@ -101,7 +104,7 @@ ResultWrapper Instrument :: execute_buy(Order buyOrder) {
         }
     }
     if(buyOrder.count > 0) {
-        std::unique_lock buy_lock {buy_mutex};
+        std::unique_lock buy_lock {buy_set_mutex};
         buySet.insert(buyOrder);
         result.add_result(std::make_shared<Added>(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
             buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
@@ -117,7 +120,7 @@ ResultWrapper Instrument :: execute_sell(Order sellOrder) {
     std::unique_lock execution_lock {execution_mutex};
 
     while (true) {
-        std::unique_lock buy_lock {buy_mutex};
+        std::unique_lock buy_lock {buy_set_mutex};
         if(buySet.empty()) {
             break;
         }
@@ -152,7 +155,7 @@ ResultWrapper Instrument :: execute_sell(Order sellOrder) {
         }
     }
     if(sellOrder.count > 0) {
-        std::unique_lock sell_lock {sell_mutex};
+        std::unique_lock sell_lock {sell_set_mutex};
         sellSet.insert(sellOrder);
         result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
             sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
@@ -163,12 +166,12 @@ ResultWrapper Instrument :: execute_sell(Order sellOrder) {
 
 ResultWrapper Instrument :: process_buy(Order buyOrder) {
     // std::cout << "acquiring sell_mutex 1 \n";
-    std::unique_lock sell_lock {sell_mutex};
+    std::unique_lock sell_lock {sell_set_mutex};
     // std::cout << "got sell_mutex 2 \n";
     if(sellSet.empty()) {
         //masukkin aja
         ResultWrapper result;
-        std::unique_lock buy_lock {buy_mutex};
+        std::unique_lock buy_lock {buy_set_mutex};
         buySet.insert(buyOrder);
         result.add_result(std::make_shared<Added>(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
             buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
@@ -185,7 +188,7 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
     } else {
         //masukkin aja
         ResultWrapper result;
-        std::unique_lock buy_lock {buy_mutex};
+        std::unique_lock buy_lock {buy_set_mutex};
         buySet.insert(buyOrder);
         result.add_result(std::make_shared<Added>(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
             buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
@@ -195,10 +198,10 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
 }
 
 ResultWrapper Instrument :: process_sell(Order sellOrder) {
-    std::unique_lock buy_lock {buy_mutex};
+    std::unique_lock buy_lock {buy_set_mutex};
     if(buySet.empty()) {
         ResultWrapper result;
-        std::unique_lock sell_lock {sell_mutex};
+        std::unique_lock sell_lock {sell_set_mutex};
         sellSet.insert(sellOrder);
         result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
             sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
@@ -215,7 +218,7 @@ ResultWrapper Instrument :: process_sell(Order sellOrder) {
     } else {
         //masukkin aja
         ResultWrapper result;
-        std::unique_lock sell_lock {sell_mutex};
+        std::unique_lock sell_lock {sell_set_mutex};
         sellSet.insert(sellOrder);
         result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
             sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));

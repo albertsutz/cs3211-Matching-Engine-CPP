@@ -28,7 +28,7 @@ void Engine::connection_thread(ClientConnection connection)
 		switch(input.type)
 		{
 			case input_cancel: {
-				SyncCerr {} << "Got cancel: ID: " << input.order_id << std::endl;
+				// SyncCerr {} << "Got cancel: ID: " << input.order_id << std::endl;
 
 				// Remember to take timestamp at the appropriate time, or compute
 				// an appropriate timestamp!
@@ -42,13 +42,15 @@ void Engine::connection_thread(ClientConnection connection)
 			}
 
 			default: {
-				SyncCerr {}
-				    << "Got order: " << static_cast<char>(input.type) << " " << input.instrument << " x " << input.count << " @ "
-				    << input.price << " ID: " << input.order_id << std::endl;
+				// SyncCerr {}
+				//     << "Got order: " << static_cast<char>(input.type) << " " << input.instrument << " x " << input.count << " @ "
+				//     << input.price << " ID: " << input.order_id << std::endl;
 
 				// Remember to take timestamp at the appropriate time, or compute
 				// an appropriate timestamp!
-				Order order{input.type == input_buy? BUY: SELL, input.order_id, input.price, input.count, (uint32_t)getCurrentTimestamp(), input.instrument, 1};
+				// std::cout << getCurrentTimestamp() << std::endl;
+				// std::cout << (uint32_t)getCurrentTimestamp() << std::endl;
+				Order order{input.type == input_buy? BUY: SELL, input.order_id, input.price, input.count, getCurrentTimestamp(), input.instrument, 1};
 				ResultWrapper results = orderbook.process_order(order);
 				for (auto& result: results.get_result()) {
 					switch(result->get_type()) {
