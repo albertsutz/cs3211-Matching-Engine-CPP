@@ -22,10 +22,6 @@ ResultWrapper Orderbook::process_order(Order order)
         m_id_map[order.order_id] = std::make_pair(order.instrument, order.order_type);
     }
 
-    // for (auto& id: result.get_deleted_ids()) {
-    //     m_id_map.erase(id);
-    // }
-
     return result;
 }
 
@@ -33,19 +29,11 @@ ResultWrapper Orderbook::process_cancel(CancelOrder order)
 {   
     //ambil mutex disini aja 
     std::unique_lock global_lock {m_global_mutex};
-    // if (!is_exist_id(order.order_id)) {
-    //     ResultWrapper result; 
-    //     result.add_result(std::make_shared<Deleted>(
-    //         order.order_id, false, getCurrentTimestamp()
-    //     ));
-    //     return result; 
-    // }
     auto pair_name_type = m_id_map.at(order.order_id); 
     auto& instruction_object = m_instrument_map.at(pair_name_type.first);
-    // m_id_map.erase(order.order_id);
     global_lock.unlock();
 
-    std::unique_lock instrument_lock {instruction_object.instr_mutex};
+    // std::unique_lock instrument_lock {instruction_object.instr_mutex};
     return instruction_object.process_cancel(order, pair_name_type.second); 
 }
 

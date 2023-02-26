@@ -29,11 +29,16 @@ public:
     std::set<Order, decltype(buyComparator)> buySet;
     std::set<Order, decltype(sellComparator)> sellSet;
     std::mutex instr_mutex;
+    std::mutex buy_mutex;
+    std::mutex sell_mutex;
+    std::mutex execution_mutex;
 
     ResultWrapper process_order(Order); 
     ResultWrapper process_cancel(CancelOrder, OrderType); 
     ResultWrapper process_buy(Order);
     ResultWrapper process_sell(Order);
+    ResultWrapper execute_buy(Order);
+    ResultWrapper execute_sell(Order);
 
     Instrument();
 
