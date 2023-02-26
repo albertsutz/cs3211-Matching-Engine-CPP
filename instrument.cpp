@@ -90,6 +90,7 @@ ResultWrapper Instrument :: execute_buy(Order buyOrder) {
         }
     }
     if(buyOrder.count > 0) {
+        buyOrder.time = getCurrentTimestamp();
         buySet.insert(buyOrder);
         result.add_result(std::make_shared<Added>(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
             buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
@@ -134,6 +135,7 @@ ResultWrapper Instrument :: execute_sell(Order sellOrder) {
         }
     }
     if(sellOrder.count > 0) {
+        sellOrder.time = getCurrentTimestamp();
         sellSet.insert(sellOrder);
         result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
             sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
@@ -146,6 +148,7 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
     if(sellSet.empty()) {
         //masukkin aja
         ResultWrapper result;
+        buyOrder.time = getCurrentTimestamp();
         buySet.insert(buyOrder);
         result.add_result(std::make_shared<Added>(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
             buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
@@ -161,6 +164,7 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
     } else {
         //masukkin aja
         ResultWrapper result;
+        buyOrder.time = getCurrentTimestamp();
         buySet.insert(buyOrder);
         result.add_result(std::make_shared<Added>(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
             buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
@@ -172,6 +176,7 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
 ResultWrapper Instrument :: process_sell(Order sellOrder) {
     if(buySet.empty()) {
         ResultWrapper result;
+        sellOrder.time = getCurrentTimestamp();
         sellSet.insert(sellOrder);
         result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
             sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
@@ -187,6 +192,7 @@ ResultWrapper Instrument :: process_sell(Order sellOrder) {
     } else {
         //masukkin aja
         ResultWrapper result;
+        sellOrder.time = getCurrentTimestamp();
         sellSet.insert(sellOrder);
         result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
             sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
