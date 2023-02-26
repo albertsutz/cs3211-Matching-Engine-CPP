@@ -8,19 +8,15 @@ ResultWrapper Orderbook::process_order(Order order)
         m_instrument_map.emplace(std::piecewise_construct, std::forward_as_tuple(order.instrument), std::forward_as_tuple());
     }
     auto& instruction_object = m_instrument_map.at(order.instrument);
-    // auto& instruction_object = dummy_instrument;
-    // if(m_instrument_map.find(order.instrument) != m_instrument_map.end()) {
-        // instruction_object = m_instrument_map.at(order.instrument);
-    // } 
     global_lock.unlock();
 
     std::unique_lock instrument_lock {instruction_object.instr_mutex};
     auto result = instruction_object.process_order(order); 
     instrument_lock.unlock();
 
-    if (result.is_added()) {
-        m_id_map[order.order_id] = std::make_pair(order.instrument, order.order_type);
-    }
+    // if (result.is_added()) {
+    m_id_map[order.order_id] = std::make_pair(order.instrument, order.order_type);
+    // }
 
     return result;
 }
@@ -29,7 +25,9 @@ ResultWrapper Orderbook::process_cancel(CancelOrder order)
 {   
     //ambil mutex disini aja 
     std::unique_lock global_lock {m_global_mutex};
+    // std::cout << order.order_id << std::endl;
     auto pair_name_type = m_id_map.at(order.order_id); 
+    // std::cout << pair_name_type.first << std::endl;
     auto& instruction_object = m_instrument_map.at(pair_name_type.first);
     global_lock.unlock();
 

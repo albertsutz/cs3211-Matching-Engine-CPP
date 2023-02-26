@@ -16,7 +16,9 @@ ResultWrapper Instrument :: process_order(Order order) {
 }
 
 ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType type) {
+    // std::cout << "acquiring inst lock\n";
     std::unique_lock instrument_lock {instr_mutex};
+    // std::cout << "got inst lock\n";
     bool deleted = false;
     if (type == OrderType :: BUY) {
         for(auto i = buySet.begin(), last = buySet.end(); i != last; ) {
@@ -25,6 +27,7 @@ ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType t
                 deleted = true;
                 break;
             }
+            i++;
         }
     } else {
         for(auto i = sellSet.begin(), last = sellSet.end(); i != last; ) {
@@ -33,10 +36,12 @@ ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType t
                 deleted = true;
                 break;
             }
+            i++;
         }
     }
     
     if(deleted) {
+        // std::cout << "Deleted\n";
         ResultWrapper res; 
         res.add_result(std::make_shared<Deleted>(
             cancel_order.order_id, true, getCurrentTimestamp()
@@ -44,6 +49,7 @@ ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType t
         res.add_deleted(cancel_order.order_id);
         return res;
     } else {
+        // std::cout << "not deleted\n";
         ResultWrapper res; 
         res.add_result(std::make_shared<Deleted>(
             cancel_order.order_id, false, getCurrentTimestamp()
@@ -56,7 +62,9 @@ ResultWrapper Instrument :: process_cancel(CancelOrder cancel_order, OrderType t
 ResultWrapper Instrument :: execute_buy(Order buyOrder) {
     ResultWrapper result;
     // cmn bsa 1 yang di execution
+    // std::cout << "acquiring execution lock" << std::endl;
     std::unique_lock execution_lock {execution_mutex};
+    // std::cout << "got execution lock" << std::endl;
     while (true) {
         std::unique_lock sell_lock {sell_mutex};
         if(sellSet.empty()) {
@@ -75,14 +83,14 @@ ResultWrapper Instrument :: execute_buy(Order buyOrder) {
 	            bestSell.execution_id++, bestSell.price, quantityTraded, getCurrentTimestamp()
                 ));
 
-            sell_mutex.lock();
+            sell_lock.lock();
             sellSet.erase(std::prev(sellSet.end()));
             if(bestSell.count > 0) {
                 sellSet.insert(bestSell);
                 break;
             } else if (buyOrder.count > 0) {
                 result.add_deleted(bestSell.order_id);
-                sell_mutex.unlock();
+                sell_lock.unlock();
                 continue;
             } else {
                 result.add_deleted(bestSell.order_id);
@@ -105,7 +113,9 @@ ResultWrapper Instrument :: execute_buy(Order buyOrder) {
 ResultWrapper Instrument :: execute_sell(Order sellOrder) {
     ResultWrapper result;
     // cmn bsa 1 yang di execution
+
     std::unique_lock execution_lock {execution_mutex};
+
     while (true) {
         std::unique_lock buy_lock {buy_mutex};
         if(buySet.empty()) {
@@ -131,7 +141,7 @@ ResultWrapper Instrument :: execute_sell(Order sellOrder) {
                 break;
             } else if (sellOrder.count > 0) {
                 result.add_deleted(bestBuy.order_id);
-                buy_mutex.unlock();
+                buy_lock.unlock();
                 continue;
             } else {
                 result.add_deleted(bestBuy.order_id);
@@ -152,9 +162,18 @@ ResultWrapper Instrument :: execute_sell(Order sellOrder) {
 }
 
 ResultWrapper Instrument :: process_buy(Order buyOrder) {
+    // std::cout << "acquiring sell_mutex 1 \n";
     std::unique_lock sell_lock {sell_mutex};
+    // std::cout << "got sell_mutex 2 \n";
     if(sellSet.empty()) {
-        return right?;
+        //masukkin aja
+        ResultWrapper result;
+        std::unique_lock buy_lock {buy_mutex};
+        buySet.insert(buyOrder);
+        result.add_result(std::make_shared<Added>(buyOrder.order_id, buyOrder.instrument, buyOrder.price,
+            buyOrder.count, buyOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
+        result.set_added();
+        return result;
     } 
     //not empty, acquire the top one
     Order bestSell = *(std::prev(sellSet.end()));
@@ -178,7 +197,13 @@ ResultWrapper Instrument :: process_buy(Order buyOrder) {
 ResultWrapper Instrument :: process_sell(Order sellOrder) {
     std::unique_lock buy_lock {buy_mutex};
     if(buySet.empty()) {
-        return right?;
+        ResultWrapper result;
+        std::unique_lock sell_lock {sell_mutex};
+        sellSet.insert(sellOrder);
+        result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
+            sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
+        result.set_added();
+        return result;
     } 
     //not empty, acquire the top one
     Order bestBuy = *(std::prev(buySet.end()));
@@ -198,42 +223,3 @@ ResultWrapper Instrument :: process_sell(Order sellOrder) {
         return result;
     } 
 }
-
-// ResultWrapper Instrument :: process_sell(Order sellOrder) {
-//     ResultWrapper result;
-
-//     while(!buySet.empty()) {
-//         // get the last buy
-//         Order bestBuy = *(std::prev(buySet.end()));
-//         // pop the last buy
-//         if(bestBuy.price >= sellOrder.price) {
-//             uint32_t quantityTraded = std::min(bestBuy.count, sellOrder.count);
-//             bestBuy.count -= quantityTraded;
-//             sellOrder.count -= quantityTraded;
-//             result.add_result(std::make_shared<Executed>(bestBuy.order_id, sellOrder.order_id,
-// 	            bestBuy.execution_id++, bestBuy.price, quantityTraded, getCurrentTimestamp()
-//                 ));
-
-//             buySet.erase(std::prev(buySet.end()));
-//             if(bestBuy.count > 0) {
-//                 buySet.insert(bestBuy);
-//                 break;
-//             } else if (sellOrder.count > 0) {
-//                 result.add_deleted(bestBuy.order_id);
-//                 continue;
-//             } else {
-//                 result.add_deleted(bestBuy.order_id);
-//                 break;
-//             }
-//         } else {
-//             break;
-//         }
-//     }
-//     if(sellOrder.count > 0) {
-//         sellSet.insert(sellOrder);
-//         result.add_result(std::make_shared<Added>(sellOrder.order_id, sellOrder.instrument, sellOrder.price,
-//             sellOrder.count, sellOrder.order_type == OrderType::SELL, getCurrentTimestamp()));
-//         result.set_added();
-//     }
-//     return result;
-// }
